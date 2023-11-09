@@ -28,6 +28,9 @@
 * Private macros
 *************************************************************************************
 ********************************************************************************** */
+/* Task priorities. */
+#define uart_task_PRIORITY (configMAX_PRIORITIES - 1)
+
 #define millisecToTicks(millisec) (((millisec) * configTICK_RATE_HZ + 999U)/1000U)
 
 #ifdef DEBUG_ASSERT
@@ -1017,17 +1020,24 @@ void OSA_InstallIntHandler(uint32_t IRQNumber, void (*handler)(void))
 * Private functions
 *************************************************************************************
 ********************************************************************************** */
-static OSA_TASK_DEFINE(startup_task, gMainThreadPriority_c, 1, gMainThreadStackSize_c, 0)  ;
 
-extern void test_case();
-
-
+static void uart_task(void *pvParameters){
+	
+	LPUART_DMA_Initialize(0,NULL);
+	test_case();
+	
+}
 
 void main (void)
 {
-	LPUART_DMA_Initialize(0,NULL);
-	test_case();
-
+    if (xTaskCreate(uart_task, "Uart_task", configMINIMAL_STACK_SIZE + 10, NULL, uart_task_PRIORITY, NULL) != pdPASS)
+    {
+        while (1)
+            ;
+    }
+    vTaskStartScheduler();
+    for (;;)
+        ;
 }
 
 /*! *********************************************************************************

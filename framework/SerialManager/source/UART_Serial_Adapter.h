@@ -125,6 +125,8 @@ uint32_t USART_DisableLowPowerWakeup(uint32_t instance);
 uint32_t USART_IsWakeupSource(uint32_t instance);
 void LPUART_UserCallback(LPUART_Type *base, lpuart_edma_handle_t *handle, status_t status, void *userData);
 uint32_t LPUART_DMA_Initialize(uint32_t instance, uartState_t *pState);
+void test_case();
+
 #if FSL_FEATURE_LPUART_HAS_SHARED_IRQ0_IRQ1
 void LPUART0_LPUART1_IRQHandler(void);
 #endif
