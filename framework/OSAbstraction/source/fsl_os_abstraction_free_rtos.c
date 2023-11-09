@@ -21,16 +21,12 @@
 #include <string.h>
 #include "GenericList.h"
 #include "fsl_common.h"
-#include "UART_Serial_Adapter.h"
 
 /*! *********************************************************************************
 *************************************************************************************
 * Private macros
 *************************************************************************************
 ********************************************************************************** */
-/* Task priorities. */
-#define uart_task_PRIORITY (configMAX_PRIORITIES - 1)
-
 #define millisecToTicks(millisec) (((millisec) * configTICK_RATE_HZ + 999U)/1000U)
 
 #ifdef DEBUG_ASSERT
@@ -1020,24 +1016,13 @@ void OSA_InstallIntHandler(uint32_t IRQNumber, void (*handler)(void))
 * Private functions
 *************************************************************************************
 ********************************************************************************** */
-
-static void uart_task(void *pvParameters){
-	
-	LPUART_DMA_Initialize(0,NULL);
-	test_case();
-	
-}
-
+static OSA_TASK_DEFINE(startup_task, gMainThreadPriority_c, 1, gMainThreadStackSize_c, 0)  ;
 void main (void)
 {
-    if (xTaskCreate(uart_task, "Uart_task", configMINIMAL_STACK_SIZE + 10, NULL, uart_task_PRIORITY, NULL) != pdPASS)
-    {
-        while (1)
-            ;
-    }
+    /* Initialize MCU clock */
+    hardware_init();
+    (void)OSA_TaskCreate(OSA_TASK(startup_task), NULL);
     vTaskStartScheduler();
-    for (;;)
-        ;
 }
 
 /*! *********************************************************************************

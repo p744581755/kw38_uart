@@ -11,21 +11,6 @@
 #ifndef __UART_SERIAL_ADAPTER_H__
 #define __UART_SERIAL_ADAPTER_H__
 
-#include "EmbeddedTypes.h"
-#include "fsl_device_registers.h"
-#include "fsl_common.h"
-#include "fsl_clock.h"
-#include "fsl_os_abstraction.h"
-#include "pin_mux.h"
-#include "board.h"
-#include "SerialManager.h"
-#include "fsl_lpuart.h"
-#include "fsl_lpuart_edma.h"
-#include "clock_config.h"
-#if defined(FSL_FEATURE_SOC_DMAMUX_COUNT) && FSL_FEATURE_SOC_DMAMUX_COUNT
-#include "fsl_dmamux.h"
-#endif
-
 /*! *********************************************************************************
 *************************************************************************************
 * Public macros
@@ -35,19 +20,6 @@
 #define gUartIsrPrio_c (0x40)
 #endif
 
-/*******************************************************************************
- * Lpuart_dma Definitions
- ******************************************************************************/
-#define DEMO_LPUART LPUART0
-#define DEMO_LPUART_CLKSRC kCLOCK_CoreSysClk
-#define DEMO_LPUART_CLK_FREQ CLOCK_GetFreq(kCLOCK_CoreSysClk)
-#define LPUART_TX_DMA_CHANNEL 0U
-#define LPUART_RX_DMA_CHANNEL 1U
-#define EXAMPLE_LPUART_DMAMUX_BASEADDR DMAMUX0
-#define EXAMPLE_LPUART_DMA_BASEADDR DMA0
-#define LPUART_TX_DMA_REQUEST kDmaRequestMux0LPUART0Tx
-#define LPUART_RX_DMA_REQUEST kDmaRequestMux0LPUART0Rx
-#define ECHO_BUFFER_LENGTH 8
 
 /*! *********************************************************************************
 *************************************************************************************
@@ -123,9 +95,6 @@ uint32_t USART_IsTxActive(uint32_t instance);
 uint32_t USART_EnableLowPowerWakeup(uint32_t instance);
 uint32_t USART_DisableLowPowerWakeup(uint32_t instance);
 uint32_t USART_IsWakeupSource(uint32_t instance);
-void LPUART_UserCallback(LPUART_Type *base, lpuart_edma_handle_t *handle, status_t status, void *userData);
-uint32_t LPUART_DMA_Initialize(uint32_t instance, uartState_t *pState);
-void test_case();
 
 #if FSL_FEATURE_LPUART_HAS_SHARED_IRQ0_IRQ1
 void LPUART0_LPUART1_IRQHandler(void);
