@@ -60,6 +60,23 @@ void BOARD_InitBootPins(void);
  * @brief Configures pin routing and optionally pin electrical features.
  *
  */
+void BOARD_InitPins(void);
+
+/*!
+ * @brief Calls initialization functions.
+ *
+ */
+void BOARD_InitBootPins(void);
+
+#define SOPT5_LPUART0ODE_0b0 0x00u    /*!<@brief LPUART0 Open Drain Enable: Open drain is disabled on LPUART0. */
+#define SOPT5_LPUART0RXSRC_0b0 0x00u  /*!<@brief LPUART0 Receive Data Source Select: LPUART_RX pin */
+#define SOPT5_LPUART0TXSRC_0b00 0x00u /*!<@brief LPUART0 Transmit Data Source Select: LPUART0_TX pin */
+
+
+/*!
+ * @brief Configures pin routing and optionally pin electrical features.
+ *
+ */
 void BOARD_InitLPUART(void);
 
 /*! @name PORTB3 (number 19), LED

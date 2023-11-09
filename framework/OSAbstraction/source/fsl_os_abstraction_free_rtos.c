@@ -21,6 +21,7 @@
 #include <string.h>
 #include "GenericList.h"
 #include "fsl_common.h"
+#include "UART_Serial_Adapter.h"
 
 /*! *********************************************************************************
 *************************************************************************************
@@ -1017,12 +1018,16 @@ void OSA_InstallIntHandler(uint32_t IRQNumber, void (*handler)(void))
 *************************************************************************************
 ********************************************************************************** */
 static OSA_TASK_DEFINE(startup_task, gMainThreadPriority_c, 1, gMainThreadStackSize_c, 0)  ;
+
+extern void test_case();
+
+
+
 void main (void)
 {
-    /* Initialize MCU clock */
-    hardware_init();
-    (void)OSA_TaskCreate(OSA_TASK(startup_task), NULL);
-    vTaskStartScheduler();
+	LPUART_DMA_Initialize(0,NULL);
+	test_case();
+
 }
 
 /*! *********************************************************************************
