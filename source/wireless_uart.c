@@ -30,6 +30,8 @@
 #include "SerialManager.h"
 #include "MemManager.h"
 #include "board.h"
+#include "ranging.h"
+#include "ranging_service.h"
 
 /* BLE Host Stack */
 #include "gatt_interface.h"
@@ -158,6 +160,9 @@ static volatile bool_t mAppDapaPending = FALSE;
 #if (gKBD_KeysCount_c == 1)
 static uint8_t mSwitchPressCnt = 0;
 #endif
+
+static bool_t      mRasValidClientList[gAppMaxConnections_c] = {FALSE};
+static rasConfig_t mRasServiceConfig = {service_wireless_uart, 0, 0, mRasValidClientList, gAppMaxConnections_c};
 
 /************************************************************************************
  *************************************************************************************
@@ -708,7 +713,7 @@ static void BleApp_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEven
             /* Subscribe client*/
             (void)Wus_Subscribe(peerDeviceId);
             (void)Bas_Subscribe(&mBasServiceConfig, peerDeviceId);
-
+            (void)Ras_Subscribe(&mRasServiceConfig, peerDeviceId);
             /* UI */
             LED_StopFlashingAllLeds();
             Led1On();
@@ -787,6 +792,7 @@ static void BleApp_ConnectionCallback(deviceId_t peerDeviceId, gapConnectionEven
             (void)Wus_Unsubscribe();
             (void)Bas_Unsubscribe(&mBasServiceConfig, peerDeviceId);
             (void)TMR_StopTimer(mBatteryMeasurementTimerId);
+            (void)Ras_Unsubscribe(&mRasServiceConfig, peerDeviceId);
 
             /* Reset Service Discovery to be sure*/
             BleServDisc_Stop(peerDeviceId);
@@ -880,12 +886,12 @@ static void BleApp_ServiceDiscoveryCallback(deviceId_t peerDeviceId, servDiscEve
     {
         case gServiceDiscovered_c:
         {
-            if (pEvent->eventData.pService->uuidType == gBleUuidType128_c)
+            if (pEvent->eventData.pService->uuidType == gBleUuidType128_c || pEvent->eventData.pService->uuidType == gBleUuidType16_c )
             {
-                if (FLib_MemCmp((void *)&uuid_service_wireless_uart, (void *)&pEvent->eventData.pService->uuid, sizeof(bleUuid_t)))
-                {
+//                if (FLib_MemCmp((void *)&uuid_service_wireless_uart, (void *)&pEvent->eventData.pService->uuid, sizeof(bleUuid_t)))
+//                {
                     BleApp_StoreServiceHandles(peerDeviceId, pEvent->eventData.pService);
-                }
+//                }
             }
         }
         break;
@@ -1073,7 +1079,7 @@ static void BleApp_StoreServiceHandles(deviceId_t peerDeviceId, gattService_t *p
 
 static void BleApp_SendUartStream(uint8_t *pRecvStream, uint8_t streamSize)
 {
-    gattCharacteristic_t characteristic = {(gattCharacteristicPropertiesBitFields_t)gGattCharPropNone_c, {0}, 0, 0};
+//    gattCharacteristic_t characteristic = {(gattCharacteristicPropertiesBitFields_t)gGattCharPropNone_c, {0}, 0, 0};
     uint8_t              mPeerId = 0;
 
     /* send UART stream to all peers */
@@ -1082,10 +1088,13 @@ static void BleApp_SendUartStream(uint8_t *pRecvStream, uint8_t streamSize)
         if (gInvalidDeviceId_c != maPeerInformation[mPeerId].deviceId &&
             mAppRunning_c == maPeerInformation[mPeerId].appState)
         {
-            characteristic.value.handle = maPeerInformation[mPeerId].clientInfo.hUartStream;
-            (void)GattClient_WriteCharacteristicValue(mPeerId, &characteristic,
-                    streamSize, pRecvStream, TRUE,
-                    FALSE, FALSE, NULL);
+//            characteristic.value.handle = maPeerInformation[mPeerId].clientInfo.hUartStream;
+//            (void)GattClient_WriteCharacteristicValue(mPeerId, &characteristic,
+//                    streamSize, pRecvStream, TRUE,
+//                    FALSE, FALSE, NULL);
+        	mRasServiceConfig.len = streamSize;
+        	mRasServiceConfig.data = pRecvStream;
+        	Ras_RecordBatteryMeasurement(&mRasServiceConfig);
         }
     }
 }
@@ -1203,7 +1212,7 @@ void BleApp_StateMachineHandler(deviceId_t peerDeviceId, appEvent_t event)
             else if ((event == mAppEvt_ServiceDiscoveryNotFound_c) ||
                      (event == mAppEvt_ServiceDiscoveryFailed_c))
             {
-                //(void)Gap_Disconnect(peerDeviceId);
+                (void)Gap_Disconnect(peerDeviceId);
             }
             else
             {
