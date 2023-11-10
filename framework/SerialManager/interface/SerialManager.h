@@ -43,7 +43,7 @@
 #endif
 
 #ifndef gSerialMgrRxBufSize_c
-#define gSerialMgrRxBufSize_c               (32)
+#define gSerialMgrRxBufSize_c               (300)
 #endif
 
 #ifndef gSerialMgrTxQueueSize_c

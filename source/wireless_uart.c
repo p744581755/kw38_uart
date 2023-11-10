@@ -134,7 +134,7 @@ static advState_t mAdvState;
 static bool_t   mScanningOn = FALSE;
 #endif
 
-static uint16_t mCharMonitoredHandles[1] = { (uint16_t)value_uart_stream };
+static uint16_t mCharMonitoredHandles[2] = { (uint16_t)value_uart_stream_rx, (uint16_t)value_uart_stream_tx};
 
 /* Service Data*/
 static wusConfig_t mWuServiceConfig;
@@ -419,6 +419,7 @@ void BleApp_HandleKeys(key_event_t events)
 void BleApp_GenericCallback(gapGenericEvent_t *pGenericEvent)
 {
     /* Call BLE Conn Manager */
+	bleResult_t result;
     BleConnManager_GenericEvent(pGenericEvent);
 
     switch (pGenericEvent->eventType)
@@ -432,13 +433,18 @@ void BleApp_GenericCallback(gapGenericEvent_t *pGenericEvent)
 #if gWuart_PeripheralRole_c == 1
         case gAdvertisingParametersSetupComplete_c:
         {
-            (void)Gap_SetAdvertisingData(&gAppAdvertisingData, &gAppScanRspData);
+        	result = Gap_SetAdvertisingData(&gAppAdvertisingData, &gAppScanRspData);
+        	if (result != gBleSuccess_c)
+        	{
+                (void)Serial_Print(gAppSerMgrIf, "Set advertising data failed", gAllowToBlock_d);
+                (void)Serial_PrintDec(gAppSerMgrIf, result);
+        	}
         }
         break;
 
         case gAdvertisingDataSetupComplete_c:
         {
-            (void)App_StartAdvertising(BleApp_AdvertisingCallback, BleApp_ConnectionCallback);
+        	result = App_StartAdvertising(BleApp_AdvertisingCallback, BleApp_ConnectionCallback);
         }
         break;
 
@@ -965,7 +971,7 @@ static void BleApp_GattServerCallback(
     {
         case gEvtAttributeWrittenWithoutResponse_c:
         {
-            if (pServerEvent->eventData.attributeWrittenEvent.handle == (uint16_t)value_uart_stream)
+            if (pServerEvent->eventData.attributeWrittenEvent.handle == (uint16_t)value_uart_stream_rx)
             {
                 BleApp_ReceivedUartStream(deviceId, pServerEvent->eventData.attributeWrittenEvent.aValue,
                                           pServerEvent->eventData.attributeWrittenEvent.cValueLength);
@@ -1197,7 +1203,7 @@ void BleApp_StateMachineHandler(deviceId_t peerDeviceId, appEvent_t event)
             else if ((event == mAppEvt_ServiceDiscoveryNotFound_c) ||
                      (event == mAppEvt_ServiceDiscoveryFailed_c))
             {
-                (void)Gap_Disconnect(peerDeviceId);
+                //(void)Gap_Disconnect(peerDeviceId);
             }
             else
             {
